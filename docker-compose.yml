@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  mongo:
+    container_name: 'mongodb'
+    image: mongo
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodata:/data/db
+  phonebook:
+    container_name: 'phonebook'
+    build: .
+    environment:
+      MONGO_URI: 'mongodb://mongo:27017'
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mongo
+volumes:
+  mongodata:
+    driver: local

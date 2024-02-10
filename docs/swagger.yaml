@@ -1,0 +1,135 @@
+definitions:
+  definition.Contact:
+    properties:
+      _id:
+        type: string
+      address:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      phone:
+        type: string
+    type: object
+info:
+  contact: {}
+  title: Phonebook API
+  description: Phonebook API allows users to manage contacts, including add, delete, edit, get with pagination and search
+paths:
+  /contact:
+    get:
+      description: Retrieve contacts with pagination support, up to 10 contacts for
+        each page
+      parameters:
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/definition.Contact'
+            type: array
+      summary: Get contacts with pagination
+    post:
+      consumes:
+      - application/json
+      description: Add a new contact to the phone book
+      parameters:
+      - description: Contact object that needs to be added
+        in: body
+        name: contact
+        required: true
+        schema:
+          $ref: '#/definitions/definition.Contact'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Contact added successfully
+          schema:
+            type: string
+      summary: Add a new contact
+  /contact/delete/{id}:
+    delete:
+      description: Deletes a contact by its ID
+      parameters:
+      - description: Contact ID (24 characters)
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Message indicating successful deletion
+          schema:
+            type: string
+        "400":
+          description: 'Bad request: invalid ID format'
+          schema:
+            type: string
+      summary: Delete a contact by ID
+  /contact/edit/{id}:
+    put:
+      description: Updates a contact by its ID
+      parameters:
+      - description: Contact ID (24 characters)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Contact details to update
+        in: body
+        name: contact
+        required: true
+        schema:
+          $ref: '#/definitions/definition.Contact'
+      responses:
+        "200":
+          description: Message indicating successful update
+          schema:
+            type: string
+        "400":
+          description: 'Bad request: invalid ID format'
+          schema:
+            type: string
+        "404":
+          description: 'Not found: no document found to update'
+          schema:
+            type: string
+      summary: Update a contact by ID
+  /contact/search:
+    get:
+      description: Searches for contacts based on parameters (firstName, lastName,
+        phone, address). If no parameters are provided, returns all contacts.
+      parameters:
+      - description: firsName
+        in: query
+        name: firstName
+        type: string
+      - description: lastName
+        in: query
+        name: lastName
+        type: string
+      - description: phone
+        in: query
+        name: phone
+        type: string
+      - description: address
+        in: query
+        name: address
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/definition.Contact'
+            type: array
+      summary: Search contacts
+swagger: "2.0"

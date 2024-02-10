@@ -1,0 +1,205 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {},
+        "title": "Phonebook API",
+        "description": "Phonebook API allows users to manage contacts, including add, delete, edit, get with pagination and search"
+    },
+    "paths": {
+        "/contact": {
+            "get": {
+                "description": "Retrieve contacts with pagination support, up to 10 contacts for each page",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get contacts with pagination",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Page number (default 1)",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/definition.Contact"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Add a new contact to the phone book",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Add a new contact",
+                "parameters": [
+                    {
+                        "description": "Contact object that needs to be added",
+                        "name": "contact",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/definition.Contact"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Contact added successfully",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/contact/delete/{id}": {
+            "delete": {
+                "description": "Deletes a contact by its ID",
+                "summary": "Delete a contact by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Contact ID (24 characters)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Message indicating successful deletion",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request: invalid ID format",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/contact/edit/{id}": {
+            "put": {
+                "description": "Updates a contact by its ID",
+                "summary": "Update a contact by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Contact ID (24 characters)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Contact details to update",
+                        "name": "contact",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/definition.Contact"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Message indicating successful update",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request: invalid ID format",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found: no document found to update",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/contact/search": {
+            "get": {
+                "description": "Searches for contacts based on parameters (firstName, lastName, phone, address). If no parameters are provided, returns all contacts.",
+                "summary": "Search contacts",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "firsName",
+                        "name": "firstName",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "lastName",
+                        "name": "lastName",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "phone",
+                        "name": "phone",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "address",
+                        "name": "address",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/definition.Contact"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "definition.Contact": {
+            "type": "object",
+            "properties": {
+                "_id": {
+                    "type": "string"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "firstName": {
+                    "type": "string"
+                },
+                "lastName": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
