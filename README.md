@@ -19,3 +19,8 @@ phonebook is a phonebook server api, which implement the following operations:
  docker compose up
 ```
 
+For API documentation and send http requests navigate to 
+
+```bash
+http://localhost:8080/docs/swagger-ui-index.html#/
+```
