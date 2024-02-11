@@ -8,8 +8,8 @@ phonebook is a phonebook server api, which implement the following operations:
  * Delete contact
 
 ## Requirements
-* Golang 1.19 or above
-* Github API personal access token
+* Golang 1.18 or above
+* Docker
 
 ## How to run the project
 * Clone the project
