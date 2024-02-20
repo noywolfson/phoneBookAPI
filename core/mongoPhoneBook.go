@@ -76,13 +76,15 @@ func validatePageParam(pageParam []string) (int, error) {
 	pageStr := pageParam[0]
 	if pageStr == "" {
 		return 1, nil
-	} else {
-		page, err := strconv.Atoi(pageStr)
-		if err != nil {
-			return -1, err
-		}
-		return page, nil
 	}
+	if pageStr == "0" {
+		return -1, errors.New("page number must be positive")
+	}
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		return -1, err
+	}
+	return page, nil
 }
 
 func (pb *MongoPhoneBook) SearchContact(query url.Values) ([]*definition.Contact, string, error) {

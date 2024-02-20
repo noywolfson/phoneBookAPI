@@ -42,7 +42,13 @@ func (h *httpHandlerStruct) GetContactWithPagination(w http.ResponseWriter, r *h
 		h.handleError(err, w, httpStatus)
 		return
 	}
-	response, _ := json.Marshal(result)
+	var response []byte
+	if len(result) == 0 {
+		response, _ = json.Marshal("no contacts were found on this page")
+
+	} else {
+		response, _ = json.Marshal(result)
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(response)
 }
