@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -147,16 +148,20 @@ func (pb *MongoPhoneBook) UpdateContact(idParam string, contact *definition.Cont
 	return updatedCount.ModifiedCount, nil
 }
 
-func (pb *MongoPhoneBook) AddContact(contact *definition.Contact) (*mongo.InsertOneResult, error) {
+func (pb *MongoPhoneBook) AddContact(contact *definition.Contact) (string, error) {
 	err := validateContact(contact)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	result, err := pb.contactsCollection.InsertOne(context.Background(), contact)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return result, nil
+	id, ok := result.InsertedID.(primitive.ObjectID)
+	if !ok {
+		return "", err
+	}
+	return fmt.Sprintf("Inserted ID: %s", id.String()[10:34]), nil
 }
 
 func validateContact(contact *definition.Contact) error {

@@ -7,11 +7,11 @@ import (
 
 var Static = struct {
 	HTTPServerPort      string `env:"HTTP_SERVER_PORT" envDefault:":8080"`
-	LimitPerPage        int64  `end:"LIMIT_PER_PAGE" envDefault:"10"`
-	MongoURI            string `end:"MONGO_URI" envDefault:"mongodb://mongo:27017"`
-	MongoDBName         string `end:"MONGO_DB" envDefault:"phoneBook"`
-	MongoCollectionName string `end:"MONGO_COLLECTION" envDefault:"contacts"`
-	MaxSizeProperty     int    `end:"MAX_SIZE_PROPERTY" envDefault:"100"`
+	LimitPerPage        int64  `env:"LIMIT_PER_PAGE" envDefault:"10"`
+	MongoURI            string `env:"MONGO_URI" envDefault:"mongodb://mongo:27017"`
+	MongoDBName         string `env:"MONGO_DB" envDefault:"phoneBook"`
+	MongoCollectionName string `env:"MONGO_COLLECTION" envDefault:"contacts"`
+	MaxSizeProperty     int    `env:"MAX_SIZE_PROPERTY" envDefault:"100"`
 }{}
 
 func init() {
