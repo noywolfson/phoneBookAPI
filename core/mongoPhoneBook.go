@@ -25,6 +25,8 @@ var (
 	ErrorInvalidPhone     = "invalid phone number. phone should include digits only"
 	ErrorInvalidFirstName = "invalid first name. name should include letters only"
 	ErrorInvalidLastName  = "invalid last name. name should include letters only"
+	BadRequest            = "BadRequest"
+	InternalServerError   = "InternalServerError"
 )
 
 type MongoPhoneBook struct {
@@ -42,17 +44,17 @@ func NewMongoPhoneBook(mongoClient *mongo.Client) *MongoPhoneBook {
 	}
 }
 
-func (pb *MongoPhoneBook) GetContactWithPagination(pageParam []string) ([]*definition.Contact, error) {
+func (pb *MongoPhoneBook) GetContactWithPagination(pageParam []string) ([]*definition.Contact, string, error) {
 	page, err := validatePageParam(pageParam)
 	if err != nil {
-		return nil, err
+		return nil, BadRequest, err
 	}
 	findOptions := *options.Find()
 	findOptions.SetLimit(config.Static.LimitPerPage)
 	findOptions.SetSkip(int64(page-1) * config.Static.LimitPerPage)
 	cursor, err := pb.contactsCollection.Find(context.TODO(), bson.M{}, &findOptions)
 	if err != nil {
-		return nil, err
+		return nil, InternalServerError, err
 	}
 	defer cursor.Close(context.TODO())
 	var contacts []*definition.Contact
@@ -60,11 +62,11 @@ func (pb *MongoPhoneBook) GetContactWithPagination(pageParam []string) ([]*defin
 		var contact *definition.Contact
 		err := cursor.Decode(&contact)
 		if err != nil {
-			return nil, err
+			return nil, BadRequest, err
 		}
 		contacts = append(contacts, contact)
 	}
-	return contacts, nil
+	return contacts, "", nil
 }
 
 func validatePageParam(pageParam []string) (int, error) {
@@ -83,7 +85,7 @@ func validatePageParam(pageParam []string) (int, error) {
 	}
 }
 
-func (pb *MongoPhoneBook) SearchContact(query url.Values) ([]*definition.Contact, error) {
+func (pb *MongoPhoneBook) SearchContact(query url.Values) ([]*definition.Contact, string, error) {
 	filter := bson.M{}
 	for key, value := range query {
 		filter[key] = value[0]
@@ -93,7 +95,7 @@ func (pb *MongoPhoneBook) SearchContact(query url.Values) ([]*definition.Contact
 	}
 	cursor, err := pb.contactsCollection.Find(context.TODO(), filter)
 	if err != nil {
-		return nil, err
+		return nil, InternalServerError, err
 	}
 	defer cursor.Close(context.TODO())
 	var contacts []*definition.Contact
@@ -101,67 +103,67 @@ func (pb *MongoPhoneBook) SearchContact(query url.Values) ([]*definition.Contact
 		var contact *definition.Contact
 		err := cursor.Decode(&contact)
 		if err != nil {
-			return nil, err
+			return nil, BadRequest, err
 		}
 		contacts = append(contacts, contact)
 	}
-	return contacts, nil
+	return contacts, "", nil
 }
 
-func (pb *MongoPhoneBook) DeleteContact(idParam string) (int64, error) {
+func (pb *MongoPhoneBook) DeleteContact(idParam string) (int64, string, error) {
 	if idParam == "" {
 		logrus.Println("doesn't sent contact id to delete")
-		return 0, errors.New(ErrorMissingID)
+		return 0, BadRequest, errors.New(ErrorMissingID)
 	}
 	id, err := primitive.ObjectIDFromHex(idParam)
 	if err != nil {
-		return -1, err
+		return -1, BadRequest, err
 	}
 	filter := bson.M{"_id": id}
 	deleteResult, err := pb.contactsCollection.DeleteOne(context.Background(), filter)
 	if err != nil {
-		return -1, err
+		return -1, InternalServerError, err
 	}
 	if deleteResult.DeletedCount == 0 {
-		return 0, nil
+		return 0, "", nil
 	}
-	return deleteResult.DeletedCount, nil
+	return deleteResult.DeletedCount, "", nil
 }
 
-func (pb *MongoPhoneBook) UpdateContact(idParam string, contact *definition.Contact) (int64, error) {
+func (pb *MongoPhoneBook) UpdateContact(idParam string, contact *definition.Contact) (int64, string, error) {
 	if idParam == "" {
 		logrus.Println("doesn't sent contact id to delete")
-		return 0, errors.New(ErrorMissingID)
+		return 0, BadRequest, errors.New(ErrorMissingID)
 	}
 	id, err := primitive.ObjectIDFromHex(idParam)
 	if err != nil {
-		return -1, err
+		return -1, BadRequest, err
 	}
 	filter := bson.M{"_id": id}
 	updatedCount, err := pb.contactsCollection.UpdateOne(context.Background(), filter, bson.M{"$set": contact})
 	if err != nil {
-		return -1, err
+		return -1, InternalServerError, err
 	}
 	if updatedCount.ModifiedCount == 0 {
-		return 0, nil
+		return 0, "", nil
 	}
-	return updatedCount.ModifiedCount, nil
+	return updatedCount.ModifiedCount, "", nil
 }
 
-func (pb *MongoPhoneBook) AddContact(contact *definition.Contact) (string, error) {
+func (pb *MongoPhoneBook) AddContact(contact *definition.Contact) (string, string, error) {
 	err := validateContact(contact)
 	if err != nil {
-		return "", err
+		return "", BadRequest, err
 	}
 	result, err := pb.contactsCollection.InsertOne(context.Background(), contact)
 	if err != nil {
-		return "", err
+		return "", InternalServerError, err
 	}
 	id, ok := result.InsertedID.(primitive.ObjectID)
 	if !ok {
-		return "", err
+		return "", InternalServerError, err
 	}
-	return fmt.Sprintf("Inserted ID: %s", id.String()[10:34]), nil
+	return fmt.Sprintf("Inserted ID: %s", id.String()[10:34]), "", nil
 }
 
 func validateContact(contact *definition.Contact) error {

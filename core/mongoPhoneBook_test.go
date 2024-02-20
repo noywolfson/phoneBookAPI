@@ -51,35 +51,35 @@ func TestAddContact(t *testing.T) {
 	mt.Run("should add valid contact", func(mt *mtest.T) {
 		phoneBookMock := NewMongoPhoneBook(mt.Client)
 		mt.AddMockResponses(mtest.CreateSuccessResponse())
-		_, err := phoneBookMock.AddContact(validContact)
+		_, _, err := phoneBookMock.AddContact(validContact)
 		assert.Nil(t, err)
 	})
 
 	mt.Run("should add contact without last name and address", func(mt *mtest.T) {
 		phoneBookMock := NewMongoPhoneBook(mt.Client)
 		mt.AddMockResponses(mtest.CreateSuccessResponse())
-		_, err := phoneBookMock.AddContact(validContactWithoutLastNameAndAddress)
+		_, _, err := phoneBookMock.AddContact(validContactWithoutLastNameAndAddress)
 		assert.Nil(t, err)
 	})
 
 	mt.Run("should not add contact without phone", func(mt *mtest.T) {
 		phoneBookMock := NewMongoPhoneBook(mt.Client)
 		mt.AddMockResponses(mtest.CreateSuccessResponse())
-		_, err := phoneBookMock.AddContact(invalidContactWithoutPhone)
+		_, _, err := phoneBookMock.AddContact(invalidContactWithoutPhone)
 		assert.EqualErrorf(t, err, ErrorMissingPhone, "Error should be: %v, got: %v", ErrorMissingPhone, err)
 	})
 
 	mt.Run("should not add contact with invalid phone", func(mt *mtest.T) {
 		phoneBookMock := NewMongoPhoneBook(mt.Client)
 		mt.AddMockResponses(mtest.CreateSuccessResponse())
-		_, err := phoneBookMock.AddContact(invalidContactPhone)
+		_, _, err := phoneBookMock.AddContact(invalidContactPhone)
 		assert.EqualErrorf(t, err, ErrorInvalidPhone, "Error should be: %v, got: %v", ErrorInvalidPhone, err)
 	})
 
 	mt.Run("should not add contact with invalid name", func(mt *mtest.T) {
 		phoneBookMock := NewMongoPhoneBook(mt.Client)
 		mt.AddMockResponses(mtest.CreateSuccessResponse())
-		_, err := phoneBookMock.AddContact(invalidContactLastName)
+		_, _, err := phoneBookMock.AddContact(invalidContactLastName)
 		assert.EqualErrorf(t, err, ErrorInvalidLastName, "Error should be: %v, got: %v", ErrorInvalidLastName, err)
 	})
 }
@@ -99,7 +99,7 @@ func TestDeleteContact(t *testing.T) {
 	mt.Run("should delete existing contact", func(mt *mtest.T) {
 		phoneBookMock := NewMongoPhoneBook(mt.Client)
 		mt.AddMockResponses(mtest.CreateSuccessResponse())
-		_, err := phoneBookMock.AddContact(validContact)
+		_, _, err := phoneBookMock.AddContact(validContact)
 		if err != nil {
 			t.Fatalf("Error inserting document: %v", err)
 		}
@@ -107,7 +107,7 @@ func TestDeleteContact(t *testing.T) {
 			{Key: "ok", Value: 1},
 			{Key: "acknowledged", Value: true},
 			{Key: "n", Value: expectedDeleted}})
-		deletedCount, err := phoneBookMock.DeleteContact(validContact.ID.String()[10:34])
+		deletedCount, _, err := phoneBookMock.DeleteContact(validContact.ID.String()[10:34])
 		assert.Nil(t, err)
 		assert.Equal(t, expectedDeleted, deletedCount, "Should delete exactly one contact")
 	})
@@ -118,7 +118,7 @@ func TestDeleteContact(t *testing.T) {
 			{Key: "ok", Value: 1},
 			{Key: "acknowledged", Value: false},
 			{Key: "n", Value: nothingDeleted}})
-		deletedCount, err := phoneBookMock.DeleteContact("1234567")
+		deletedCount, _, err := phoneBookMock.DeleteContact("1234567")
 		assert.EqualErrorf(t, err, "the provided hex string is not a valid ObjectID", "wrong ID format")
 		assert.Equal(t, -1, int(deletedCount), "got wrong ID format")
 	})
@@ -129,7 +129,7 @@ func TestDeleteContact(t *testing.T) {
 			{Key: "ok", Value: 1},
 			{Key: "acknowledged", Value: false},
 			{Key: "n", Value: nothingDeleted}})
-		deletedCount, err := phoneBookMock.DeleteContact("123412341234123412341234")
+		deletedCount, _, err := phoneBookMock.DeleteContact("123412341234123412341234")
 		assert.Nil(t, err)
 		assert.Equal(t, deletedCount, nothingDeleted, "Should not delete not existing contact")
 	})
@@ -151,7 +151,7 @@ func TestEditContact(t *testing.T) {
 	mt.Run("should edit existing contact", func(mt *mtest.T) {
 		phoneBookMock := NewMongoPhoneBook(mt.Client)
 		mt.AddMockResponses(mtest.CreateSuccessResponse())
-		_, err := phoneBookMock.AddContact(contact)
+		_, _, err := phoneBookMock.AddContact(contact)
 		if err != nil {
 			t.Fatalf("Error inserting document: %v", err)
 		}
@@ -160,7 +160,7 @@ func TestEditContact(t *testing.T) {
 			bson.E{Key: "nModified", Value: expectedUpdated},
 		))
 
-		updatedCount, err := phoneBookMock.UpdateContact(contact.ID.String()[10:34], &definition.Contact{FirstName: "changed"})
+		updatedCount, _, err := phoneBookMock.UpdateContact(contact.ID.String()[10:34], &definition.Contact{FirstName: "changed"})
 		assert.Nil(t, err)
 		assert.Equal(t, expectedUpdated, updatedCount, "Should update exactly one contact")
 	})
@@ -172,7 +172,7 @@ func TestEditContact(t *testing.T) {
 			bson.E{Key: "nModified", Value: nothingUpdated},
 		))
 
-		deletedCount, err := phoneBookMock.UpdateContact("1234567", &definition.Contact{FirstName: "changed"})
+		deletedCount, _, err := phoneBookMock.UpdateContact("1234567", &definition.Contact{FirstName: "changed"})
 		assert.EqualErrorf(t, err, "the provided hex string is not a valid ObjectID", "wrong ID format")
 		assert.Equal(t, -1, int(deletedCount), "got wrong ID format")
 	})
@@ -184,7 +184,7 @@ func TestEditContact(t *testing.T) {
 			bson.E{Key: "nModified", Value: nothingUpdated},
 		))
 
-		updatedCount, err := phoneBookMock.UpdateContact("123412341234123412341234", &definition.Contact{FirstName: "changed"})
+		updatedCount, _, err := phoneBookMock.UpdateContact("123412341234123412341234", &definition.Contact{FirstName: "changed"})
 		assert.Nil(t, err)
 		assert.Equal(t, updatedCount, nothingUpdated, "Should not delete not existing contact")
 	})
@@ -196,7 +196,7 @@ func TestEditContact(t *testing.T) {
 			bson.E{Key: "nModified", Value: nothingUpdated},
 		))
 
-		updatedCount, err := phoneBookMock.UpdateContact("", &definition.Contact{FirstName: "changed"})
+		updatedCount, _, err := phoneBookMock.UpdateContact("", &definition.Contact{FirstName: "changed"})
 		assert.EqualErrorf(t, err, ErrorMissingID, "missing ID")
 		assert.Equal(t, updatedCount, nothingUpdated, "Should not delete not existing contact")
 	})
@@ -242,7 +242,7 @@ func TestSearchContact(t *testing.T) {
 	mt.Run("should find one contact by name", func(mt *mtest.T) {
 		phoneBookMock := NewMongoPhoneBook(mt.Client)
 		mt.AddMockResponses(mtest.CreateSuccessResponse())
-		_, err := phoneBookMock.AddContact(contacts[1])
+		_, _, err := phoneBookMock.AddContact(contacts[1])
 		if err != nil {
 			t.Fatalf("Error inserting document: %v", err)
 		}
@@ -257,7 +257,7 @@ func TestSearchContact(t *testing.T) {
 		values := url.Values{
 			"firstName": []string{"jojo"},
 		}
-		foundedContacts, err := phoneBookMock.SearchContact(values)
+		foundedContacts, _, err := phoneBookMock.SearchContact(values)
 		assert.Nil(t, err)
 		assert.Equal(t, expectedFound, len(foundedContacts), "Should find exactly one contact")
 	})
@@ -265,7 +265,7 @@ func TestSearchContact(t *testing.T) {
 	mt.Run("should find one contact by phone", func(mt *mtest.T) {
 		phoneBookMock := NewMongoPhoneBook(mt.Client)
 		mt.AddMockResponses(mtest.CreateSuccessResponse())
-		_, err := phoneBookMock.AddContact(contacts[3])
+		_, _, err := phoneBookMock.AddContact(contacts[3])
 		if err != nil {
 			t.Fatalf("Error inserting document: %v", err)
 		}
@@ -280,7 +280,7 @@ func TestSearchContact(t *testing.T) {
 		values := url.Values{
 			"phone": []string{"0525425452"},
 		}
-		foundedContacts, err := phoneBookMock.SearchContact(values)
+		foundedContacts, _, err := phoneBookMock.SearchContact(values)
 		assert.Nil(t, err)
 		assert.Equal(t, expectedFound, len(foundedContacts), "Should find exactly one contact")
 		assert.Equal(t, foundedContacts[0].ID, contacts[3].ID)
@@ -293,12 +293,12 @@ func TestSearchContact(t *testing.T) {
 	mt.Run("should find multiple contact", func(mt *mtest.T) {
 		phoneBookMock := NewMongoPhoneBook(mt.Client)
 		mt.AddMockResponses(mtest.CreateSuccessResponse())
-		_, err := phoneBookMock.AddContact(contacts[2])
+		_, _, err := phoneBookMock.AddContact(contacts[2])
 		if err != nil {
 			t.Fatalf("Error inserting document: %v", err)
 		}
 		mt.AddMockResponses(mtest.CreateSuccessResponse())
-		_, err = phoneBookMock.AddContact(contacts[3])
+		_, _, err = phoneBookMock.AddContact(contacts[3])
 		if err != nil {
 			t.Fatalf("Error inserting document: %v", err)
 		}
@@ -319,7 +319,7 @@ func TestSearchContact(t *testing.T) {
 		values := url.Values{
 			"firstName": []string{"gogo"},
 		}
-		foundedContacts, err := phoneBookMock.SearchContact(values)
+		foundedContacts, _, err := phoneBookMock.SearchContact(values)
 		assert.Nil(t, err)
 		assert.Equal(t, 2, len(foundedContacts), "Should find two contact")
 		assert.Equal(t, foundedContacts[0].ID, contacts[2].ID)
@@ -337,7 +337,7 @@ func TestSearchContact(t *testing.T) {
 	mt.Run("should find one contact by phone and address", func(mt *mtest.T) {
 		phoneBookMock := NewMongoPhoneBook(mt.Client)
 		mt.AddMockResponses(mtest.CreateSuccessResponse())
-		_, err := phoneBookMock.AddContact(contacts[0])
+		_, _, err := phoneBookMock.AddContact(contacts[0])
 		if err != nil {
 			t.Fatalf("Error inserting document: %v", err)
 		}
@@ -353,7 +353,7 @@ func TestSearchContact(t *testing.T) {
 			"phone":   []string{"0545454524"},
 			"address": []string{"Tel Aviv"},
 		}
-		foundedContacts, err := phoneBookMock.SearchContact(values)
+		foundedContacts, _, err := phoneBookMock.SearchContact(values)
 		assert.Nil(t, err)
 		assert.Equal(t, expectedFound, len(foundedContacts), "Should find exactly one contact")
 		assert.Equal(t, foundedContacts[0].ID, contacts[0].ID)
@@ -366,7 +366,7 @@ func TestSearchContact(t *testing.T) {
 	mt.Run("should not find contact by address and not existing phone", func(mt *mtest.T) {
 		phoneBookMock := NewMongoPhoneBook(mt.Client)
 		mt.AddMockResponses(mtest.CreateSuccessResponse())
-		_, err := phoneBookMock.AddContact(contacts[0])
+		_, _, err := phoneBookMock.AddContact(contacts[0])
 		if err != nil {
 			t.Fatalf("Error inserting document: %v", err)
 		}
@@ -375,7 +375,7 @@ func TestSearchContact(t *testing.T) {
 			"phone":   []string{"0000000000"},
 			"address": []string{"Tel Aviv"},
 		}
-		foundedContacts, err := phoneBookMock.SearchContact(values)
+		foundedContacts, _, err := phoneBookMock.SearchContact(values)
 		assert.Nil(t, err)
 		assert.Equal(t, nothingFound, len(foundedContacts), "Should not found contact")
 	})
@@ -383,7 +383,7 @@ func TestSearchContact(t *testing.T) {
 	mt.Run("should not found not existing contact", func(mt *mtest.T) {
 		phoneBookMock := NewMongoPhoneBook(mt.Client)
 		mt.AddMockResponses(mtest.CreateSuccessResponse())
-		_, err := phoneBookMock.AddContact(contacts[0])
+		_, _, err := phoneBookMock.AddContact(contacts[0])
 		if err != nil {
 			t.Fatalf("Error inserting document: %v", err)
 		}
@@ -391,7 +391,7 @@ func TestSearchContact(t *testing.T) {
 		values := url.Values{
 			"firstName": []string{"baba"},
 		}
-		foundedContacts, err := phoneBookMock.SearchContact(values)
+		foundedContacts, _, err := phoneBookMock.SearchContact(values)
 		assert.Nil(t, err)
 		assert.Equal(t, nothingFound, len(foundedContacts), "Should not found contact")
 	})
@@ -570,7 +570,7 @@ func TestGetContact(t *testing.T) {
 				{Key: "address", Value: contacts[9].Address},
 			},
 		))
-		result, err := phoneBookMock.GetContactWithPagination([]string{"1"})
+		result, _, err := phoneBookMock.GetContactWithPagination([]string{"1"})
 		assert.Nil(t, err)
 		assert.Equal(t, config.Static.LimitPerPage, int64(len(result)), "Should returns 10 contacts")
 	})
@@ -598,7 +598,7 @@ func TestGetContact(t *testing.T) {
 				{Key: "address", Value: contacts[11].Address},
 			},
 		))
-		result, err := phoneBookMock.GetContactWithPagination([]string{"2"})
+		result, _, err := phoneBookMock.GetContactWithPagination([]string{"2"})
 		assert.Nil(t, err)
 		assert.Equal(t, 2, len(result), "Should returns 2 contacts")
 	})
@@ -682,7 +682,7 @@ func TestGetContact(t *testing.T) {
 				{Key: "address", Value: contacts[9].Address},
 			},
 		))
-		result, err := phoneBookMock.GetContactWithPagination([]string{""})
+		result, _, err := phoneBookMock.GetContactWithPagination([]string{""})
 		assert.Nil(t, err)
 		assert.Equal(t, config.Static.LimitPerPage, int64(len(result)), "Should returns 10 contacts")
 	})
@@ -695,7 +695,7 @@ func TestGetContact(t *testing.T) {
 			t.Fatalf("Error inserting document: %v", err)
 		}
 		mt.AddMockResponses(mtest.CreateCursorResponse(1, fmt.Sprintf("%s.%s", mt.DB.Name(), mt.Coll.Name()), mtest.FirstBatch))
-		result, err := phoneBookMock.GetContactWithPagination([]string{"4"})
+		result, _, err := phoneBookMock.GetContactWithPagination([]string{"4"})
 		assert.Nil(t, err)
 		assert.Equal(t, 0, len(result), "Should not return contacts")
 	})
@@ -708,7 +708,7 @@ func TestGetContact(t *testing.T) {
 			t.Fatalf("Error inserting document: %v", err)
 		}
 		mt.AddMockResponses(mtest.CreateCursorResponse(1, fmt.Sprintf("%s.%s", mt.DB.Name(), mt.Coll.Name()), mtest.FirstBatch))
-		result, err := phoneBookMock.GetContactWithPagination([]string{"a"})
+		result, _, err := phoneBookMock.GetContactWithPagination([]string{"a"})
 		assert.NotNil(t, err)
 		assert.Equal(t, 0, len(result), "Should not return contacts")
 	})

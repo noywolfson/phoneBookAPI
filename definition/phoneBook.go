@@ -5,9 +5,9 @@ import (
 )
 
 type IPhoneBook interface {
-	GetContactWithPagination(pageParam []string) ([]*Contact, error)
-	AddContact(contact *Contact) (string, error)
-	UpdateContact(id string, updatedContact *Contact) (int64, error)
-	DeleteContact(id string) (int64, error)
-	SearchContact(query url.Values) ([]*Contact, error)
+	GetContactWithPagination(pageParam []string) ([]*Contact, string, error)
+	AddContact(contact *Contact) (string, string, error)
+	UpdateContact(id string, updatedContact *Contact) (int64, string, error)
+	DeleteContact(id string) (int64, string, error)
+	SearchContact(query url.Values) ([]*Contact, string, error)
 }

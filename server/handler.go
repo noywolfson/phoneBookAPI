@@ -36,9 +36,10 @@ func initHttpHandler(phoneBook *definition.IPhoneBook) {
 func (h *httpHandlerStruct) GetContactWithPagination(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	pageParam := query["page"]
-	result, err := (*h.phoneBook).GetContactWithPagination(pageParam)
+	result, status, err := (*h.phoneBook).GetContactWithPagination(pageParam)
 	if err != nil {
-		h.handleError(err, w, http.StatusInternalServerError)
+		httpStatus := extractStatus(status)
+		h.handleError(err, w, httpStatus)
 		return
 	}
 	response, _ := json.Marshal(result)
@@ -56,12 +57,13 @@ func (h *httpHandlerStruct) GetContactWithPagination(w http.ResponseWriter, r *h
 func (h *httpHandlerStruct) AddContact(w http.ResponseWriter, r *http.Request) {
 	contact, err := h.decodeContact(r.Body)
 	if err != nil {
-		h.handleError(err, w, http.StatusInternalServerError)
+		h.handleError(err, w, http.StatusBadRequest)
 		return
 	}
-	result, err := (*h.phoneBook).AddContact(contact)
+	result, status, err := (*h.phoneBook).AddContact(contact)
 	if err != nil {
-		h.handleError(err, w, http.StatusInternalServerError)
+		httpStatus := extractStatus(status)
+		h.handleError(err, w, httpStatus)
 		return
 	}
 	json.NewEncoder(w).Encode(result)
@@ -75,9 +77,10 @@ func (h *httpHandlerStruct) AddContact(w http.ResponseWriter, r *http.Request) {
 // @Router /contact/delete/{id} [delete]
 func (h *httpHandlerStruct) DeleteContact(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	deleteCount, err := (*h.phoneBook).DeleteContact(params["id"])
+	deleteCount, status, err := (*h.phoneBook).DeleteContact(params["id"])
 	if err != nil {
-		h.handleError(err, w, http.StatusInternalServerError)
+		httpStatus := extractStatus(status)
+		h.handleError(err, w, httpStatus)
 		return
 	}
 	var response []byte
@@ -100,13 +103,14 @@ func (h *httpHandlerStruct) DeleteContact(w http.ResponseWriter, r *http.Request
 func (h *httpHandlerStruct) UpdateContact(w http.ResponseWriter, r *http.Request) {
 	updatedContact, err := h.decodeContact(r.Body)
 	if err != nil {
-		h.handleError(err, w, http.StatusInternalServerError)
+		h.handleError(err, w, http.StatusBadRequest)
 		return
 	}
 	params := mux.Vars(r)
-	updatedCount, err := (*h.phoneBook).UpdateContact(params["id"], updatedContact)
+	updatedCount, status, err := (*h.phoneBook).UpdateContact(params["id"], updatedContact)
 	if err != nil {
-		h.handleError(err, w, http.StatusInternalServerError)
+		httpStatus := extractStatus(status)
+		h.handleError(err, w, httpStatus)
 		return
 	}
 	var response []byte
@@ -129,9 +133,10 @@ func (h *httpHandlerStruct) UpdateContact(w http.ResponseWriter, r *http.Request
 // @Router /contact/search [get]
 func (h *httpHandlerStruct) SearchContact(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
-	contacts, err := (*h.phoneBook).SearchContact(query)
+	contacts, status, err := (*h.phoneBook).SearchContact(query)
 	if err != nil {
-		h.handleError(err, w, http.StatusInternalServerError)
+		httpStatus := extractStatus(status)
+		h.handleError(err, w, httpStatus)
 		return
 	}
 	response, _ := json.Marshal(contacts)
@@ -169,4 +174,14 @@ func (h *httpHandlerStruct) validateContactSizeInput(contact *definition.Contact
 		len(contact.LastName) <= config.Static.MaxSizeProperty &&
 		len(contact.Phone) <= config.Static.MaxSizeProperty &&
 		len(contact.Address) <= config.Static.MaxSizeProperty
+}
+
+func extractStatus(status string) int {
+	switch status {
+	case "BadRequest":
+		return http.StatusBadRequest
+	case "InternalServerError":
+		return http.StatusInternalServerError
+	}
+	return -1
 }
